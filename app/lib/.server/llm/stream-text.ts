@@ -1,5 +1,6 @@
 import { convertToCoreMessages, streamText as _streamText } from 'ai';
 import { MAX_TOKENS } from './constants';
+import { getTrace } from './telemetry';
 import { getSystemPrompt } from '~/lib/common/prompts/prompts';
 import {
   DEFAULT_MODEL,
@@ -226,7 +227,23 @@ export async function streamText(props: {
 
   logger.info(`Sending llm call to ${provider.name} with model ${modelDetails.name}`);
 
-  return _streamText({
+  const trace = getTrace();
+  const span = trace.startLLMSpan({
+    name: 'llm',
+    model: currentModel,
+    input: {
+      type: 'chat_messages',
+      value: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...processedMessages,
+      ],
+    },
+  });
+
+  const streamPromises = _streamText({
     model: provider.getModelInstance({
       model: currentModel,
       serverEnv,
@@ -238,4 +255,23 @@ export async function streamText(props: {
     messages: convertToCoreMessages(processedMessages as any),
     ...options,
   });
+  streamPromises.text.then((text) => {
+    streamPromises.usage.then((usage) => {
+      streamPromises.response.then((response) => {
+        span.end({
+          model: response.modelId,
+          output: {
+            type: 'chat_messages',
+            value: [{ role: 'assistant', content: text }],
+          },
+          metrics: {
+            promptTokens: usage.promptTokens,
+            completionTokens: usage.completionTokens,
+          },
+        });
+      });
+    });
+  });
+
+  return streamPromises;
 }
