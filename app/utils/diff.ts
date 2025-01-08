@@ -3,8 +3,8 @@ import type { FileMap } from '~/lib/stores/files';
 import { MODIFICATIONS_TAG_NAME, WORK_DIR } from './constants';
 
 export const modificationsRegex = new RegExp(
-  `^<${MODIFICATIONS_TAG_NAME}>[\\s\\S]*?<\\/${MODIFICATIONS_TAG_NAME}>\\s+`,
-  'g',
+  `^<${MODIFICATIONS_TAG_NAME}>[\\s\\S]*<\\/${MODIFICATIONS_TAG_NAME}>\\s+`,
+  'gm',
 );
 
 interface ModifiedFile {

@@ -4,6 +4,7 @@
  */
 import { MODEL_REGEX, PROVIDER_REGEX } from '~/utils/constants';
 import { Markdown } from './Markdown';
+import { modificationsRegex } from '~/utils/diff';
 
 interface UserMessageProps {
   content: string | Array<{ type: string; text?: string; image?: string }>;
@@ -43,5 +44,5 @@ export function UserMessage({ content }: UserMessageProps) {
 }
 
 function stripMetadata(content: string) {
-  return content.replace(MODEL_REGEX, '').replace(PROVIDER_REGEX, '');
+  return content.replace(modificationsRegex, '').replace(MODEL_REGEX, '').replace(PROVIDER_REGEX, '');
 }
